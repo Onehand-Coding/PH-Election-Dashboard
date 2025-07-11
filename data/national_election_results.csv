@@ -1,0 +1,22 @@
+position,candidate_name,party,total_votes,region
+President,Candidate A,Party X,1000000,Luzon
+President,Candidate B,Party Y,950000,Visayas
+Senator,Candidate C,Party X,800000,Metro Manila
+Senator,Candidate D,Party Z,700000,Luzon
+Senator,Maria Reyes,Lakas Party,18500000,National
+Senator,Juan Santos,Progresibo Party,17200000,National
+Senator,Luis Aquino,Reporma Party,16800000,National
+Senator,Ana David,Lakas Party,15300000,National
+Senator,Pedro Garcia,Progresibo Party,14900000,National
+Senator,Leni Cruz,Independent,14500000,National
+Senator,Carlos Tan,Reporma Party,13900000,National
+Senator,Sofia Lee,Lakas Party,13500000,National
+Senator,Miguel Lim,Progresibo Party,12800000,National
+Senator,Grace Mercado,Independent,12500000,National
+Senator,Antonio Wong,Reporma Party,11800000,National
+Senator,Isabelle Flores,Lakas Party,11500000,National
+Party-List,Akbayan Citizens' Action Party,Akbayan,1200000,National
+Party-List,Gabriela Women's Party,Gabriela,1100000,National
+Party-List,Bayan Muna,Bayan Muna,1050000,National
+Party-List,Anakpawis,Anakpawis,750000,National
+Party-List,Kabataan Partylist,Kabataan,680000,National

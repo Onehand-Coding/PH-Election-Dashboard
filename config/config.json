@@ -1,11 +1,13 @@
 {
-    "election_year": 2025,
-    "current_election_type": "national",
-    "data_files": {
-        "national": "national_election_results.csv",
-        "local": "local_election_results.csv",
-        "barangay": "barangay_election_results.csv"
-    },
-    "log_level": "INFO",
-    "cache_ttl": 300
+  "election_year": 2025,
+  "current_election_type": "national",
+  "data_files": {
+    "national": "national_election_results.csv",
+    "local": "local_election_results.csv",
+    "barangay": "barangay_election_results.csv"
+  },
+  "data_source": "sqlite",
+  "auto_refresh": true,
+  "cache_ttl": 300,
+  "log_level": "INFO"
 }

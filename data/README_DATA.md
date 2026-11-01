@@ -1,26 +1,38 @@
-## Election Data Format
+# Election Data Format
 
-This directory contains sample data files for the Philippine Election Dashboard.
+The dashboard reads CSV files listed in `config/config.json`. Headers are
+normalized to lowercase snake case, and spaces or hyphens become underscores.
 
-### Common Columns
-- `Position`: The position being contested (e.g., Senator, Governor, Barangay Captain).
-- `Candidate_Name`: The name of the candidate.
-- `Party`: The political party of the candidate. Can be 'Independent' or blank if not applicable.
-- `Total_Votes`: The total number of votes received by the candidate.
+## Columns
 
-### `national_election_results.csv`
-- `Position`: Senator, Party-List.
-- `Region_Focus`: Typically "National" for these positions. (Can be adapted if specific regional focus for senators is tracked).
+| Column | Required | Notes |
+| --- | --- | --- |
+| `position` | yes | For example Senator, Governor, Barangay Captain |
+| `candidate_name` | yes | Candidate or party-list name |
+| `total_votes` | yes | Non-negative integer |
+| `party` | no | Blank or `Independent` allowed |
+| `region` | no | Region or island-group label |
+| `region_focus` | no | Fallback label for national data |
+| `province` | no | |
+| `municipality_city` | no | |
+| `barangay` | no | |
 
-### `local_election_results.csv`
-- `Region`: The administrative region (e.g., NCR, Region III).
-- `Province`: The province.
-- `Municipality_City`: The municipality or city. This will be blank for provincial-level positions like Governor.
+Accepted aliases:
 
-### `barangay_election_results.csv`
-- `Region`: The administrative region.
-- `Province`: The province.
-- `Municipality_City`: The municipality or city.
-- `Barangay`: The barangay.
+- `Candidate`, `Name` -> `candidate_name`
+- `Votes`, `Vote_Count` -> `total_votes`
+- `Municipality`, `City` -> `municipality_city`
 
-Ensure CSV files are comma-delimited and UTF-8 encoded.
+## Validation
+
+- Missing required columns stop the page with an error.
+- Rows with missing, non-numeric, or negative votes are dropped with a warning.
+- Rows with a blank position or candidate name are dropped with a warning.
+- Duplicate rows are kept.
+
+## Region Labels
+
+The map accepts region names such as `Region III (Central Luzon)`, short forms
+such as `Region III`, aliases such as `NCR` and `Metro Manila`, island groups
+`Luzon`, `Visayas`, and `Mindanao`, and PSGC region codes such as
+`1300000000`. Unmatched labels are reported below the map.

@@ -1,0 +1,18 @@
+{
+  "providers": [
+    {
+      "name": "lmstudio",
+      "kind": "openai",
+      "base_url": "http://localhost:1234/v1",
+      "api_key_env": null,
+      "model": "local-model"
+    },
+    {
+      "name": "my-openai-compatible",
+      "kind": "openai",
+      "base_url": "https://api.example.com/v1",
+      "api_key_env": "MY_PROVIDER_API_KEY",
+      "model": "my-model"
+    }
+  ]
+}

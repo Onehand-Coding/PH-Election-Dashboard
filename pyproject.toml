@@ -1,19 +1,19 @@
 [project]
-name = "PH-election-dashboard"
-version = "0.1.0"
-description = "A Dashboard for Philippine Election Data"
+name = "ph-election-dashboard"
+version = "0.2.0"
+description = "A dashboard for Philippine election sample data"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = { text = "MIT" }
 authors = [
     { name = "Onehand Coding", email = "onehand.coding433@gmail.com" },
 ]
 dependencies = [
     "pandas>=2.0",
-    "streamlit>=1.20",
+    "streamlit>=1.40",
     "plotly>=5.0",
-    "google-generativeai>=0.5",
     "python-dotenv>=1.0",
+    "requests>=2.31",
 ]
 
 [build-system]
@@ -27,17 +27,19 @@ packages = ["src/ph_election_dashboard"]
 dev = [
     "pytest>=8.4",
     "pytest-mock>=3.14",
-    "pytest-asyncio>=0.24",
     "ruff>=0.6",
 ]
 
+[project.scripts]
+ph-election-dashboard = "ph_election_dashboard.launcher:main"
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-python_files = ["test_*.py"]
+addopts = "-ra"
 
 [tool.ruff]
 line-length = 88
-target-version = "py38"
+target-version = "py310"
 
-[project.scripts]
-ph-election-dashboard = "ph_election_dashboard.launcher:main"
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]

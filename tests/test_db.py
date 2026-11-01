@@ -82,3 +82,33 @@ def test_read_missing_type_returns_empty_frame(tmp_path):
     assert result.empty
     assert "candidate_name" in result.columns
     connection.close()
+
+
+def test_initialize_rebuilds_old_schema(tmp_path):
+    connection = db.connect(tmp_path / "test.db")
+    connection.execute(
+        "CREATE TABLE election_results (id INTEGER PRIMARY KEY, position TEXT)"
+    )
+    connection.execute("PRAGMA user_version = 0")
+    connection.commit()
+
+    db.initialize(connection)
+
+    columns = {
+        row["name"] for row in connection.execute("PRAGMA table_info(election_results)")
+    }
+    assert "region" in columns
+    assert db.schema_version(connection) == db.SCHEMA_VERSION
+    connection.close()
+
+
+def test_initialize_rebuilds_future_schema_version(tmp_path):
+    connection = db.connect(tmp_path / "test.db")
+    db.initialize(connection)
+    connection.execute("PRAGMA user_version = 99")
+    connection.commit()
+
+    db.initialize(connection)
+
+    assert db.schema_version(connection) == db.SCHEMA_VERSION
+    connection.close()

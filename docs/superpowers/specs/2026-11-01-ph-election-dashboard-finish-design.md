@@ -148,7 +148,7 @@ Validation behavior:
 - Duplicate rows are kept. Deduplication is not safe without a unique key.
 - Empty required strings are dropped with a warning count.
 
-SQLite schema (version 1, additive migrations only):
+SQLite schema (version 1; incompatible cache tables are dropped and rebuilt):
 
 ```sql
 PRAGMA user_version = 1;
@@ -189,7 +189,6 @@ CREATE TABLE IF NOT EXISTS source_state (
 - `data_files`: CSV file name per election level.
 - `data_source`: `"sqlite"` (default) or `"csv"`.
 - `auto_refresh`: `true` or `false` (default `true`).
-- `cache_ttl`: seconds for Streamlit data caching.
 - `log_level`: logging level.
 
 Seeding rules:
@@ -250,8 +249,8 @@ Custom providers:
 
 - `config/providers.json` holds a list of provider objects. Each object declares `name`, `kind`
   (`openai`, `anthropic`, or `gemini`), `base_url`, `api_key_env`, `model`, and optional
-  `headers`. It references keys by environment variable name only, never by value, so the file is
-  safe to commit.
+  `headers`. It references keys by environment variable name only, never by value. The file is
+  git-ignored so accidental headers or tokens cannot be committed.
 - A session-only "Custom provider" form in the sidebar accepts the same fields plus a password
   input for the key. Session values live in `st.session_state` only and are never written to disk
   or logs.

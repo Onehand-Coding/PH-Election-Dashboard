@@ -71,6 +71,41 @@ def test_load_custom_providers(tmp_path):
     assert providers["lmstudio"].configured() is True
 
 
+def test_custom_provider_ignores_invalid_headers(tmp_path):
+    path = tmp_path / "providers.json"
+    path.write_text(
+        json.dumps(
+            {
+                "providers": [
+                    {
+                        "name": "badheaders",
+                        "kind": "openai",
+                        "base_url": "http://example.test/v1",
+                        "api_key_env": None,
+                        "model": "my-model",
+                        "headers": ["not", "a", "dict"],
+                    }
+                ]
+            }
+        )
+    )
+    providers = ai.load_custom_providers(path)
+    assert providers["badheaders"].headers == {}
+
+
+def test_build_stats_without_party_column():
+    frame = pd.DataFrame(
+        {
+            "position": ["Senator"],
+            "candidate_name": ["Alice"],
+            "total_votes": [10],
+            "region": ["Luzon"],
+        }
+    )
+    stats = ai.build_stats(frame, "national")
+    assert stats["party_shares"] == []
+
+
 def test_available_providers_merges_custom(tmp_path):
     path = tmp_path / "providers.json"
     path.write_text(
@@ -154,6 +189,37 @@ def test_generate_summary_openai_success(monkeypatch):
     )
     assert result.used_fallback is False
     assert result.text == "Model summary"
+
+
+def test_gemini_sends_key_in_header(monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY", "gem-key")
+
+    class FakeResponse:
+        status_code = 200
+
+        def json(self):
+            return {
+                "candidates": [{"content": {"parts": [{"text": "Gemini summary"}]}}]
+            }
+
+    def fake_post(url, headers, json, timeout):
+        assert url == (
+            "https://generativelanguage.googleapis.com/v1beta/"
+            "models/gemini-2.5-flash:generateContent"
+        )
+        assert headers["x-goog-api-key"] == "gem-key"
+        assert "gem-key" not in url
+        return FakeResponse()
+
+    monkeypatch.setattr(ai.requests, "post", fake_post)
+    result = ai.generate_summary(
+        sample_frame(),
+        "national",
+        ai.BUILTIN_PROVIDERS["gemini"],
+        "gemini-2.5-flash",
+    )
+    assert result.used_fallback is False
+    assert result.text == "Gemini summary"
 
 
 def test_generate_summary_error_is_redacted(monkeypatch):

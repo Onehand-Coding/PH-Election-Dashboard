@@ -7,6 +7,27 @@ from pathlib import Path
 import pandas as pd
 
 SCHEMA_VERSION = 1
+SCHEMA_COLUMNS = {
+    "id",
+    "election_type",
+    "position",
+    "candidate_name",
+    "party",
+    "total_votes",
+    "region",
+    "region_focus",
+    "province",
+    "municipality_city",
+    "barangay",
+}
+SOURCE_COLUMNS = {
+    "election_type",
+    "source_path",
+    "mtime_ns",
+    "size_bytes",
+    "row_count",
+    "loaded_at",
+}
 RESULT_COLUMNS = [
     "position",
     "candidate_name",
@@ -27,7 +48,37 @@ def connect(db_path: Path) -> sqlite3.Connection:
     return connection
 
 
+def _table_columns(connection: sqlite3.Connection, table: str) -> set[str]:
+    return {row["name"] for row in connection.execute(f"PRAGMA table_info({table})")}
+
+
+def _needs_rebuild(connection: sqlite3.Connection) -> bool:
+    version = schema_version(connection)
+    if version not in (0, SCHEMA_VERSION):
+        return True
+    tables = {
+        row["name"]
+        for row in connection.execute(
+            "SELECT name FROM sqlite_master WHERE type = 'table'"
+        )
+    }
+    if "election_results" in tables and not SCHEMA_COLUMNS.issubset(
+        _table_columns(connection, "election_results")
+    ):
+        return True
+    if "source_state" in tables and not SOURCE_COLUMNS.issubset(
+        _table_columns(connection, "source_state")
+    ):
+        return True
+    return False
+
+
 def initialize(connection: sqlite3.Connection) -> None:
+    if _needs_rebuild(connection):
+        connection.executescript(
+            "DROP TABLE IF EXISTS election_results; DROP TABLE IF EXISTS source_state;"
+        )
+        connection.commit()
     connection.executescript(
         """
         CREATE TABLE IF NOT EXISTS election_results (

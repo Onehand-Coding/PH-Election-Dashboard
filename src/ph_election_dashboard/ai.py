@@ -121,16 +121,16 @@ def load_custom_providers(path: Path) -> dict[str, Provider]:
         if not name or kind not in ("openai", "anthropic", "gemini"):
             continue
         key_env = item.get("api_key_env") or None
+        raw_headers = item.get("headers") or {}
+        if not isinstance(raw_headers, dict):
+            raw_headers = {}
         providers[name] = Provider(
             name=name,
             kind=kind,  # type: ignore[arg-type]
             base_url=base_url,
             api_key_env=str(key_env) if key_env else None,
             default_model=model,
-            headers={
-                str(key): str(value)
-                for key, value in (item.get("headers") or {}).items()
-            },
+            headers={str(key): str(value) for key, value in raw_headers.items()},
             key_required=bool(key_env),
         )
     return providers
@@ -184,7 +184,10 @@ def build_stats(
 
     top = frame.sort_values("total_votes", ascending=False).head(5)
     party_shares = []
-    party_frame = frame.dropna(subset=["party"])
+    if "party" in frame.columns:
+        party_frame = frame.dropna(subset=["party"])
+    else:
+        party_frame = frame.iloc[0:0]
     if not party_frame.empty:
         totals = party_frame.groupby("party")["total_votes"].sum()
         total_votes = int(totals.sum())
@@ -221,7 +224,9 @@ def build_stats(
             {
                 "candidate": str(record["candidate_name"]),
                 "position": str(record["position"]),
-                "party": (None if pd.isna(record["party"]) else str(record["party"])),
+                "party": (
+                    None if pd.isna(record.get("party")) else str(record["party"])
+                ),
                 "votes": int(record["total_votes"]),
             }
             for record in top.to_dict("records")
@@ -398,6 +403,7 @@ def _generate(
     if provider.kind == "gemini":
         if not api_key:
             raise ProviderError("Missing API key")
+        headers["x-goog-api-key"] = api_key
         payload = {
             "contents": [{"parts": [{"text": prompt}]}],
             "generationConfig": {
@@ -406,7 +412,7 @@ def _generate(
             },
         }
         data = _post(
-            f"{base}/models/{model}:generateContent?key={api_key}",
+            f"{base}/models/{model}:generateContent",
             headers=headers,
             payload=payload,
             timeout=timeout,

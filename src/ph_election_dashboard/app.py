@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import os
 from pathlib import Path
 
@@ -85,7 +86,14 @@ def _render_ai(
             type="password",
             key="custom_key",
         )
-        provider = ai.Provider("custom", kind, base_url, None, model, key_required=True)
+        requires_key = st.sidebar.checkbox(
+            "Requires API key",
+            value=True,
+            key="custom_requires_key",
+        )
+        provider = ai.Provider(
+            "custom", kind, base_url, None, model, key_required=requires_key
+        )
     else:
         provider = providers[provider_name]
         model_env = f"{provider_name.upper().replace('-', '_')}_MODEL"
@@ -109,8 +117,15 @@ def _render_ai(
         if key in ("region", "province", "municipality_city", "barangay")
     }
     total_votes = int(frame["total_votes"].sum()) if not frame.empty else 0
+    api_key = provider.api_key(key_override)
+    key_fingerprint = (
+        hashlib.sha256(api_key.encode()).hexdigest() if api_key else "none"
+    )
     cache_key = (
         provider_name,
+        provider.kind,
+        provider.base_url,
+        key_fingerprint,
         model,
         election_type,
         selected_position,
@@ -130,8 +145,14 @@ def _render_ai(
                 location_filters,
                 key_override,
             )
-        st.session_state["ai_summary"] = {"key": cache_key, "result": result}
-        cached = st.session_state["ai_summary"]
+        if result.error is None:
+            st.session_state["ai_summary"] = {
+                "key": cache_key,
+                "result": result,
+            }
+        else:
+            st.session_state.pop("ai_summary", None)
+        cached = {"key": cache_key, "result": result}
 
     result = cached["result"]
     st.subheader("AI summary")

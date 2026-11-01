@@ -12,7 +12,7 @@ def write_csv(path, body):
     path.write_text("Position,Candidate_Name,Party,Total_Votes,Region\n" + body)
 
 
-def test_app_runs_and_filters(tmp_path, monkeypatch):
+def build_app(tmp_path, monkeypatch, data_source="csv"):
     st.cache_data.clear()
     data_dir = tmp_path / "data"
     config_dir = tmp_path / "config"
@@ -37,9 +37,8 @@ def test_app_runs_and_filters(tmp_path, monkeypatch):
             "local": "local_election_results.csv",
             "barangay": "barangay_election_results.csv",
         },
-        "data_source": "csv",
+        "data_source": data_source,
         "auto_refresh": False,
-        "cache_ttl": 300,
         "log_level": "ERROR",
     }
     config_dir.mkdir(parents=True, exist_ok=True)
@@ -53,6 +52,11 @@ def test_app_runs_and_filters(tmp_path, monkeypatch):
 
     app = AppTest.from_file(str(ROOT / "app.py"), default_timeout=20)
     app.run()
+    return app, data_dir
+
+
+def test_app_runs_filters_searches_resets_and_switches(tmp_path, monkeypatch):
+    app, _ = build_app(tmp_path, monkeypatch)
     assert not app.exception
     assert len(app.dataframe) == 1
     assert len(app.dataframe[0].value) == 2
@@ -61,3 +65,49 @@ def test_app_runs_and_filters(tmp_path, monkeypatch):
     position.set_value("Senator").run()
     assert not app.exception
     assert len(app.dataframe[0].value) == 1
+
+    search = next(box for box in app.text_input if box.label == "Search candidate")
+    search.set_value("Alice").run()
+    assert not app.exception
+    assert len(app.dataframe[0].value) == 1
+
+    reset = next(button for button in app.button if button.label == "Reset filters")
+    reset.click().run()
+    assert not app.exception
+    assert len(app.dataframe[0].value) == 2
+
+    level = next(radio for radio in app.radio if radio.label == "Election level")
+    level.set_value("local").run()
+    assert not app.exception
+    assert len(app.dataframe[0].value) == 1
+
+
+def test_app_sqlite_mode_creates_database(tmp_path, monkeypatch):
+    app, data_dir = build_app(tmp_path, monkeypatch, data_source="sqlite")
+    assert not app.exception
+    assert (data_dir / "election.db").exists()
+
+
+def test_ai_cache_invalidates_when_key_changes(tmp_path, monkeypatch):
+    app, _ = build_app(tmp_path, monkeypatch)
+    import ph_election_dashboard.app as app_module
+
+    calls = []
+
+    def fake_generate(*args, **kwargs):
+        calls.append(kwargs.get("api_key_override"))
+        return app_module.ai.SummaryResult("model summary", used_fallback=False)
+
+    monkeypatch.setattr(app_module.ai, "generate_summary", fake_generate)
+
+    show = next(box for box in app.checkbox if box.label == "Show AI summary")
+    show.check().run()
+    assert not app.exception
+    assert len(calls) == 1
+
+    key_box = next(
+        box for box in app.text_input if box.label == "API key override (session only)"
+    )
+    key_box.set_value("new-secret").run()
+    assert not app.exception
+    assert len(calls) == 2

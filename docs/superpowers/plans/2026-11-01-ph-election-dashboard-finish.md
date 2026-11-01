@@ -3775,4 +3775,21 @@ These deviations from the plan were made during execution and are reflected in t
 - Auto refresh and filter behavior were verified in a live browser against a temporary data
   directory.
 
+Post-review fixes:
+
+- The AI summary cache key now includes a SHA-256 fingerprint of the active API key and the
+  provider kind and base URL, so entering a key after seeing the fallback triggers a new call.
+  Failed AI calls are not cached, so a retry is possible.
+- `config/providers.json` is git-ignored.
+- SQLite initialization drops and recreates cache tables when the schema version or required
+  columns do not match. A stale cache can no longer block startup.
+- Geo lookup accepts zero-padded PSGC codes and merges labels that resolve to the same region.
+- Gemini keys are sent in the `x-goog-api-key` header instead of the URL query string.
+- Provider parsing ignores non-dict `headers`, and AI stats tolerate a missing `party` column.
+- `cache_ttl` was removed because the signature-based cache does not use it.
+- The custom provider form has a `Requires API key` checkbox for local no-key endpoints.
+- `python -m ph_election_dashboard` now propagates the launcher exit code.
+- Smoke tests cover reset, candidate search, election-level switching, SQLite mode, and AI cache
+  invalidation when the key changes.
+
 

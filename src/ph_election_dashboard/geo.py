@@ -87,6 +87,7 @@ def _region_lookup(geojson: dict[str, Any]) -> dict[str, str]:
             continue
         lookup[_normalize(name)] = code
         lookup[_normalize(code)] = code
+        lookup[_normalize(code.zfill(10))] = code
         short = re.sub(r"\s*\(.*?\)\s*", " ", name)
         lookup[_normalize(short)] = code
     return lookup
@@ -142,10 +143,14 @@ def aggregate_for_map(
                     "total_votes": int(record["total_votes"]),
                 }
             )
-    return (
-        pd.DataFrame(rows, columns=["label", "geo_id", "total_votes"]),
-        sorted(set(unmapped)),
-    )
+    result = pd.DataFrame(rows, columns=["label", "geo_id", "total_votes"])
+    if not result.empty:
+        result = result.groupby("geo_id", as_index=False, sort=False).agg(
+            label=("label", "first"),
+            total_votes=("total_votes", "sum"),
+        )
+        result = result[["label", "geo_id", "total_votes"]]
+    return result, sorted(set(unmapped))
 
 
 def available_map_levels(frame: pd.DataFrame) -> list[str]:

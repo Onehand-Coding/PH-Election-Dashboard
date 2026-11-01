@@ -12,6 +12,7 @@ dist/
 .env
 .env.*
 !.env.example
+config/providers.json
 data/election.db
 data/election.db-*
 logs/

@@ -54,6 +54,27 @@ def test_available_map_levels_prefers_broader_coverage():
     ]
 
 
+def test_zero_padded_psgc_code_maps():
+    frame = pd.DataFrame({"region": ["0100000000"], "total_votes": [5]})
+    aggregated, unmapped = geo.aggregate_for_map(frame, geo.LEVEL_REGION)
+    assert aggregated["geo_id"].tolist() == ["100000000"]
+    assert unmapped == []
+
+
+def test_duplicate_labels_aggregate_by_geo_id():
+    frame = pd.DataFrame(
+        {
+            "region": ["NCR", "Metro Manila", "ncr"],
+            "total_votes": [10, 20, 30],
+        }
+    )
+    aggregated, unmapped = geo.aggregate_for_map(frame, geo.LEVEL_REGION)
+    assert len(aggregated) == 1
+    assert aggregated.loc[0, "geo_id"] == "1300000000"
+    assert aggregated.loc[0, "total_votes"] == 60
+    assert unmapped == []
+
+
 def test_region_focus_is_a_fallback_source():
     frame = pd.DataFrame({"region_focus": ["Visayas"], "total_votes": [50]})
     aggregated, _ = geo.aggregate_for_map(frame, geo.LEVEL_ISLAND)

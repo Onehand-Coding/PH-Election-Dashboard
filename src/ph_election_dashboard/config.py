@@ -18,7 +18,6 @@ DEFAULT_CONFIG: dict[str, Any] = {
     },
     "data_source": "sqlite",
     "auto_refresh": True,
-    "cache_ttl": 300,
     "log_level": "INFO",
 }
 

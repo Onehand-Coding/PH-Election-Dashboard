@@ -8,6 +8,5 @@
   },
   "data_source": "sqlite",
   "auto_refresh": true,
-  "cache_ttl": 300,
   "log_level": "INFO"
 }

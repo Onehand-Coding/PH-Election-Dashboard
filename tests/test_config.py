@@ -24,7 +24,7 @@ def test_load_config_merges_file(tmp_path):
     merged = config.load_config(path)
     assert merged["election_year"] == 2028
     assert merged["data_source"] == "csv"
-    assert merged["cache_ttl"] == 300
+    assert merged["log_level"] == "INFO"
 
 
 def test_paths_from_env(monkeypatch, tmp_path):

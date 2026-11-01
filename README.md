@@ -17,7 +17,7 @@ summary that supports multiple providers.
 - View bar charts, party vote shares, regional totals, and a choropleth map.
 - Download the filtered table as CSV.
 - Reload automatically when a source CSV changes.
-- Read from SQLite by default, with CSV as a fallback source.
+- Read from SQLite by default, or select CSV in the sidebar.
 - Generate an AI summary with Gemini, OpenAI, OpenRouter, Groq, Anthropic,
   Ollama, or a custom provider.
 - Fall back to a deterministic summary when no API key is configured.
@@ -56,7 +56,6 @@ uv run ph-election-dashboard
   },
   "data_source": "sqlite",
   "auto_refresh": true,
-  "cache_ttl": 300,
   "log_level": "INFO"
 }
 ```
@@ -101,8 +100,8 @@ logged or persisted by the app.
 ### Custom providers
 
 Copy `config/providers.example.json` to `config/providers.json` and add an
-entry. Custom entries reference keys by environment variable name, never by
-value:
+entry. `config/providers.json` is git-ignored. Custom entries reference keys by
+environment variable name, never by value:
 
 ```json
 {
